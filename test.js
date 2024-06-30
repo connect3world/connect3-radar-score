@@ -6,12 +6,7 @@ const {combineCanvases, generateBadgeMinterCanvas} = require("./generateChart");
 const server = http.createServer(async (req, res) => {
     const parsedUrl = url.parse(req.url, true); // Parse the URL including query strings
     if (parsedUrl.pathname === '/image') {
-        const query = parsedUrl.query;
-        const data = query.data ? query.data.split(',').map(Number) : [50, 50, 50, 50, 50];
-        const score = query.score ? Number(query.score) : 0;
-        const labels = query.labels ? query.labels.split(',') : ['Posts', 'Followers', 'Comments', 'Likes', 'NFTs'];
-        const roles = query.role ? query.role.split(',').map(role => role.trim()) : [];
-        const title = query.title ? query.title.trim() : 'Your Social Data';
+        const { data, score, labels, roles, title } = parseQueryParams(req);
 
         try {
             const imageData = await combineCanvases(data, labels, score, roles, title);
@@ -24,7 +19,7 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: "Failed to generate image" }));
         }
-    } else     if (parsedUrl.pathname === '/imageMinted') {
+    } else if (parsedUrl.pathname === '/imageMinted') {
         const query = parsedUrl.query;
         const roles = query.role ? query.role.split(',').map(role => role.trim()) : [];
         try {
@@ -39,12 +34,7 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({ error: "Failed to generate image" }));
         }
     } else if (parsedUrl.pathname === '/html') {
-        const query = parsedUrl.query;
-        const data = query.data ? query.data.split(',').map(Number) : [50, 50, 50, 50, 50];
-        const score = query.score ? Number(query.score) : 0;
-        const labels = query.labels ? query.labels.split(',') : ['Posts', 'Followers', 'Comments', 'Likes', 'NFTs'];
-        const roles = query.role ? query.role.split(',').map(role => role.trim()) : [];
-        const title = query.title ? query.title.trim() : 'Your Social Data';
+        const { data, score, labels, roles, title } = parseQueryParams(req);
 
         try {
             const imageData = await combineCanvases(data, labels, score, roles, title);
@@ -108,6 +98,18 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: 'Not Found' }));
     }
 });
+
+function parseQueryParams(req) {
+    const { query } = url.parse(req.url, true);
+
+    return {
+        data: query.data ? query.data.split(',').map(Number) : [50, 50, 50, 50, 50],
+        score: query.score ? Number(query.score) : 0,
+        labels: query.labels ? query.labels.split(',') : ['Posts', 'Followers', 'Comments', 'Likes', 'NFTs'],
+        roles: query.role ? query.role.split(',').map(role => role.trim()) : [],
+        title: query.title ? query.title.trim() : 'Your Social Data'
+    };
+}
 
 const port = 3000;
 server.listen(port, () => {
